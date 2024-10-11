@@ -163,6 +163,7 @@ describe('AI Assistant::enabled', () => {
 				}
 			});
 		}).as('chatRequest');
+		cy.intercept('POST', '/rest/workflows/**/run?partialExecutionVersion=-1').as('executeWorkflow');
 		cy.createFixtureWorkflow('aiAssistant/workflows/test_workflow.json');
 		wf.actions.openNode('Edit Fields');
 		ndv.getters.nodeExecuteButton().click();
@@ -170,6 +171,7 @@ describe('AI Assistant::enabled', () => {
 		cy.wait('@chatRequest');
 		aiAssistant.getters.chatMessagesAssistant().should('have.length', 1);
 		ndv.getters.nodeExecuteButton().click();
+		cy.wait('@executeWorkflow');
 		cy.wait('@chatRequest');
 		// Respond 'Yes' to the quick reply (request new suggestion)
 		aiAssistant.getters.quickReplies().contains('Yes').click();

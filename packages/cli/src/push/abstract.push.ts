@@ -1,5 +1,6 @@
 import type { PushPayload, PushType } from '@n8n/api-types';
-import { assert, jsonStringify } from 'n8n-workflow';
+import { JsonStreamStringify } from 'json-stream-stringify';
+import type { Readable } from 'node:stream';
 import { Service } from 'typedi';
 
 import type { User } from '@/databases/entities/user';
@@ -23,14 +24,17 @@ export abstract class AbstractPush<Connection> extends TypedEmitter<AbstractPush
 
 	protected userIdByPushRef: Record<string, string> = {};
 
+	private messageQueue: Array<[Connection[], Readable]> = [];
+
 	protected abstract close(connection: Connection): void;
-	protected abstract sendToOneConnection(connection: Connection, data: string): void;
+	protected abstract sendTo(connections: Connection[], stream: Readable): Promise<void>;
 	protected abstract ping(connection: Connection): void;
+
+	// Ping all connected clients every 60 seconds
+	private pingTimer = setInterval(() => this.pingAll(), 60 * 1000);
 
 	constructor(protected readonly logger: Logger) {
 		super();
-		// Ping all connected clients every 60 seconds
-		setInterval(() => this.pingAll(), 60 * 1000);
 	}
 
 	protected add(pushRef: string, userId: User['id'], connection: Connection) {
@@ -65,21 +69,6 @@ export abstract class AbstractPush<Connection> extends TypedEmitter<AbstractPush
 		delete this.userIdByPushRef[pushRef];
 	}
 
-	private sendTo<Type extends PushType>(type: Type, data: PushPayload<Type>, pushRefs: string[]) {
-		this.logger.debug(`Send data of type "${type}" to editor-UI`, {
-			dataType: type,
-			pushRefs: pushRefs.join(', '),
-		});
-
-		const stringifiedPayload = jsonStringify({ type, data }, { replaceCircularRefs: true });
-
-		for (const pushRef of pushRefs) {
-			const connection = this.connections[pushRef];
-			assert(connection);
-			this.sendToOneConnection(connection, stringifiedPayload);
-		}
-	}
-
 	private pingAll() {
 		for (const pushRef in this.connections) {
 			this.ping(this.connections[pushRef]);
@@ -87,16 +76,16 @@ export abstract class AbstractPush<Connection> extends TypedEmitter<AbstractPush
 	}
 
 	sendToAll<Type extends PushType>(type: Type, data: PushPayload<Type>) {
-		this.sendTo(type, data, Object.keys(this.connections));
+		this.enqueue(Object.values(this.connections), type, data);
 	}
 
 	sendToOne<Type extends PushType>(type: Type, data: PushPayload<Type>, pushRef: string) {
-		if (this.connections[pushRef] === undefined) {
-			this.logger.error(`The session "${pushRef}" is not registered.`, { pushRef });
+		const client = this.connections[pushRef];
+		if (client === undefined) {
+			this.logger.warn(`The session "${pushRef}" is not registered.`, { pushRef });
 			return;
 		}
-
-		this.sendTo(type, data, [pushRef]);
+		this.enqueue([client], type, data);
 	}
 
 	sendToUsers<Type extends PushType>(
@@ -104,12 +93,10 @@ export abstract class AbstractPush<Connection> extends TypedEmitter<AbstractPush
 		data: PushPayload<Type>,
 		userIds: Array<User['id']>,
 	) {
-		const { connections } = this;
-		const userPushRefs = Object.keys(connections).filter((pushRef) =>
-			userIds.includes(this.userIdByPushRef[pushRef]),
-		);
-
-		this.sendTo(type, data, userPushRefs);
+		const userConnections = Object.entries(this.connections)
+			.filter(([pushRef]) => userIds.includes(this.userIdByPushRef[pushRef]))
+			.map(([_, connection]) => connection);
+		this.enqueue(userConnections, type, data);
 	}
 
 	closeAllConnections() {
@@ -120,9 +107,27 @@ export abstract class AbstractPush<Connection> extends TypedEmitter<AbstractPush
 			// has actually closed.
 			this.close(this.connections[pushRef]);
 		}
+		clearInterval(this.pingTimer);
 	}
 
 	hasPushRef(pushRef: string) {
 		return this.connections[pushRef] !== undefined;
+	}
+
+	private enqueue<Type extends PushType>(
+		connections: Connection[],
+		type: Type,
+		data: PushPayload<Type>,
+	) {
+		const stream = new JsonStreamStringify({ type, data }, undefined, undefined, true);
+		this.messageQueue.push([connections, stream]);
+		setImmediate(() => void this.processQueue());
+	}
+
+	private async processQueue() {
+		while (this.messageQueue.length) {
+			const [clients, stream] = this.messageQueue.shift()!;
+			await this.sendTo(clients, stream);
+		}
 	}
 }

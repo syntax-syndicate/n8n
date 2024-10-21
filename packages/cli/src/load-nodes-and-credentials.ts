@@ -311,7 +311,6 @@ export class LoadNodesAndCredentials {
 			this.types.nodes = this.types.nodes.concat(
 				types.nodes.map(({ name, ...rest }) => ({
 					...rest,
-					// TODO: check if CUSTOM nodes should also be prefixed or not
 					name: `${packageName}.${name}`,
 				})),
 			);

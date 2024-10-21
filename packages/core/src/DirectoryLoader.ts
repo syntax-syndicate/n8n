@@ -107,18 +107,16 @@ export abstract class DirectoryLoader {
 		const tempNode = this.loadClass<INodeType | IVersionedNodeType>(filePath);
 		this.addCodex(tempNode, filePath);
 
-		const nodeName = tempNode.description.name;
-		const fullNodeName = `${this.packageName}.${nodeName}`;
+		const nodeType = tempNode.description.name;
+		const fullNodeType = `${this.packageName}.${nodeType}`;
 
-		if (this.includeNodes.length && !this.includeNodes.includes(fullNodeName)) {
+		if (this.includeNodes.length && !this.includeNodes.includes(fullNodeType)) {
 			return;
 		}
 
-		if (this.excludeNodes.includes(fullNodeName)) {
+		if (this.excludeNodes.includes(fullNodeType)) {
 			return;
 		}
-
-		tempNode.description.name = fullNodeName;
 
 		this.fixIconPaths(tempNode.description, filePath);
 
@@ -139,7 +137,7 @@ export abstract class DirectoryLoader {
 			if (currentVersionNode.hasOwnProperty('executeSingle')) {
 				throw new ApplicationError(
 					'"executeSingle" has been removed. Please update the code of this node to use "execute" instead.',
-					{ extra: { nodeName: `${this.packageName}.${nodeName}` } },
+					{ extra: { nodeName: `${this.packageName}.${nodeType}` } },
 				);
 			}
 		} else {
@@ -151,18 +149,18 @@ export abstract class DirectoryLoader {
 				: tempNode.description.version;
 		}
 
-		this.known.nodes[fullNodeName] = {
-			className: nodeName,
+		this.known.nodes[nodeType] = {
+			className: tempNode.constructor.name,
 			sourcePath: filePath,
 		};
 
-		this.nodeTypes[fullNodeName] = {
+		this.nodeTypes[nodeType] = {
 			type: tempNode,
 			sourcePath: filePath,
 		};
 
 		this.loadedNodes.push({
-			name: fullNodeName,
+			name: nodeType,
 			version: nodeVersion,
 		});
 
@@ -174,7 +172,7 @@ export abstract class DirectoryLoader {
 			if (!this.nodesByCredential[credential.name]) {
 				this.nodesByCredential[credential.name] = [];
 			}
-			this.nodesByCredential[credential.name].push(fullNodeName);
+			this.nodesByCredential[credential.name].push(nodeType);
 		}
 	}
 
@@ -421,10 +419,7 @@ export class PackageDirectoryLoader extends DirectoryLoader {
 export class LazyPackageDirectoryLoader extends PackageDirectoryLoader {
 	override async loadAll() {
 		try {
-			const knownNodes: typeof this.known.nodes = await this.readJSON('dist/known/nodes.json');
-			for (const nodeName in knownNodes) {
-				this.known.nodes[`${this.packageName}.${nodeName}`] = knownNodes[nodeName];
-			}
+			this.known.nodes = await this.readJSON('dist/known/nodes.json');
 			this.known.credentials = await this.readJSON('dist/known/credentials.json');
 
 			this.types.nodes = await this.readJSON('dist/types/nodes.json');

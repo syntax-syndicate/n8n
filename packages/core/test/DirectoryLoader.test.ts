@@ -66,13 +66,13 @@ describe('DirectoryLoader', () => {
 			expect(mockFsPromises.readFile).not.toHaveBeenCalled();
 			expect(classLoader.loadClassInIsolation).toHaveBeenCalledTimes(3);
 
-			expect(loader.nodesByCredential).toEqual({ credential1: ['CUSTOM.node1'] });
+			expect(loader.nodesByCredential).toEqual({ credential1: ['node1'] });
 			expect(loader.credentialTypes).toEqual({
 				credential1: { sourcePath: 'dist/Credential1.js', type: mockCredential1 },
 			});
 			expect(loader.nodeTypes).toEqual({
-				'CUSTOM.node1': { sourcePath: 'dist/Node1/Node1.node.js', type: mockNode1 },
-				'CUSTOM.node2': { sourcePath: 'dist/Node2/Node2.node.js', type: mockNode2 },
+				node1: { sourcePath: 'dist/Node1/Node1.node.js', type: mockNode1 },
+				node2: { sourcePath: 'dist/Node2/Node2.node.js', type: mockNode2 },
 			});
 			expect(mockCredential1.iconUrl).toBe('icons/CUSTOM/dist/credential1.svg');
 			expect(mockNode1.description.iconUrl).toBe('icons/CUSTOM/dist/Node1/node1.svg');
@@ -103,13 +103,13 @@ describe('DirectoryLoader', () => {
 			expect(mockFsPromises.readFile).not.toHaveBeenCalled();
 			expect(classLoader.loadClassInIsolation).toHaveBeenCalledTimes(3);
 
-			expect(loader.nodesByCredential).toEqual({ credential1: ['n8n-nodes-testing.node1'] });
+			expect(loader.nodesByCredential).toEqual({ credential1: ['node1'] });
 			expect(loader.credentialTypes).toEqual({
 				credential1: { sourcePath: 'dist/Credential1.js', type: mockCredential1 },
 			});
 			expect(loader.nodeTypes).toEqual({
-				'n8n-nodes-testing.node1': { sourcePath: 'dist/Node1/Node1.node.js', type: mockNode1 },
-				'n8n-nodes-testing.node2': { sourcePath: 'dist/Node2/Node2.node.js', type: mockNode2 },
+				node1: { sourcePath: 'dist/Node1/Node1.node.js', type: mockNode1 },
+				node2: { sourcePath: 'dist/Node2/Node2.node.js', type: mockNode2 },
 			});
 			expect(mockCredential1.iconUrl).toBe('icons/n8n-nodes-testing/dist/credential1.svg');
 			expect(mockNode1.description.iconUrl).toBe('icons/n8n-nodes-testing/dist/Node1/node1.svg');

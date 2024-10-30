@@ -19,6 +19,7 @@ export type ProjectSharingData = {
 	id: string;
 	name: string | null;
 	type: ProjectType;
+	icon: { type: string; color: string } | null;
 	createdAt: string;
 	updatedAt: string;
 };
@@ -31,7 +32,7 @@ export type ProjectListItem = ProjectSharingData & {
 	scopes?: Scope[];
 };
 export type ProjectCreateRequest = { name: string };
-export type ProjectUpdateRequest = Pick<Project, 'id' | 'name'> & {
+export type ProjectUpdateRequest = Pick<Project, 'id' | 'name' | 'icon'> & {
 	relations: ProjectRelationPayload[];
 };
 export type ProjectsCount = Record<ProjectType, number>;

@@ -6,6 +6,11 @@ import { onClickOutside } from '@vueuse/core';
 import { ref, defineProps, onMounted, computed } from 'vue';
 import { useI18n } from '../../composables/useI18n';
 
+type Icon = {
+	type: 'icon' | 'emoji';
+	value: string;
+};
+
 const emojiRanges = [
 	[0x1f600, 0x1f64f], // Emoticons
 	[0x1f300, 0x1f5ff], // Symbols & Pictographs
@@ -21,16 +26,20 @@ defineOptions({ name: 'N8nIconPicker' });
 
 const props = withDefaults(
 	defineProps<{
-		defaultIcon: string;
+		defaultIcon: { type: 'icon' | 'emoji'; value: string };
 		buttonTooltip: string;
 		availableIcons: string[];
 	}>(),
 	{
-		defaultIcon: 'smile',
+		defaultIcon: () => ({ type: 'icon', value: 'smile' }),
 		buttonTooltip: 'Select an icon',
 		availableIcons: () => [],
 	},
 );
+
+const emit = defineEmits<{
+	'icon-selected': (value: Icon) => void;
+}>();
 
 const hasAvailableIcons = computed(() => props.availableIcons.length > 0);
 
@@ -45,10 +54,7 @@ const tabs = ref<Array<{ value: string; label: string }>>(
 		: [{ value: 'emojis', label: t('iconPicker.tabs.emojis') }],
 );
 const selectedTab = ref<string>(tabs.value[0].value);
-const selectedIcon = ref<{ type: 'icon' | 'emoji'; value: string }>({
-	type: 'icon',
-	value: props.defaultIcon,
-});
+const selectedIcon = ref<Icon>(props.defaultIcon);
 const emojis = ref<string[]>([]);
 
 const generateEmojis = () => {
@@ -68,11 +74,13 @@ onClickOutside(container, () => {
 const selectIcon = (value: string) => {
 	selectedIcon.value = { type: 'icon', value };
 	popupVisible.value = false;
+	emit('icon-selected', selectedIcon.value);
 };
 
 const selectEmoji = (value: string) => {
 	selectedIcon.value = { type: 'emoji', value };
 	popupVisible.value = false;
+	emit('icon-selected', selectedIcon.value);
 };
 
 onMounted(() => {
@@ -88,13 +96,14 @@ onMounted(() => {
 			:title="buttonTooltip ?? t('iconPicker.button.tooltip')"
 			:class="$style['icon-button']"
 			type="tertiary"
+			native-type="button"
 			data-test-id="project-settings-back-button"
 			@click="popupVisible = !popupVisible"
 		/>
 		<N8nButton
 			v-else-if="selectedIcon.type === 'emoji'"
-			type="tertiary"
 			:class="$style['emoji-button']"
+			type="tertiary"
 			@click="popupVisible = !popupVisible"
 		>
 			{{ selectedIcon.value }}
@@ -132,6 +141,11 @@ onMounted(() => {
 	position: relative;
 }
 
+.emoji-button,
+.icon-button {
+	min-width: 33px;
+}
+
 .emoji-button {
 	padding: var(--spacing-2xs);
 }
@@ -157,7 +171,7 @@ onMounted(() => {
 		display: flex;
 		max-height: 400px;
 		flex-wrap: wrap;
-		gap: var(--spacing-2xs);
+		gap: var(--spacing-xs);
 		padding: var(--spacing-2xs);
 		overflow-y: auto;
 	}

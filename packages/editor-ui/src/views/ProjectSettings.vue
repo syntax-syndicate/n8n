@@ -19,7 +19,6 @@ import { useCloudPlanStore } from '@/stores/cloudPlan.store';
 import { useTelemetry } from '@/composables/useTelemetry';
 import { useDocumentTitle } from '@/composables/useDocumentTitle';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
 type FormDataDiff = {
 	name?: string;
@@ -54,6 +53,11 @@ const projectRoleTranslations = ref<{ [key: string]: string }>({
 const nameInput = ref<InstanceType<typeof N8nFormInput> | null>(null);
 
 const availableProjectIcons: string[] = Object.keys(library.definitions.fas);
+
+const projectIcon = ref<{ type: 'icon' | 'emoji'; value: string }>({
+	type: 'icon',
+	value: 'layer-group',
+});
 
 const usersList = computed(() =>
 	usersStore.allUsers.filter((user: IUser) => {
@@ -192,6 +196,7 @@ const onSubmit = async () => {
 					userId: r.id,
 					role: r.role,
 				})),
+				icon: projectIcon.value,
 			});
 			sendTelemetry(diff);
 			isDirty.value = false;
@@ -238,6 +243,11 @@ const selectProjectNameIfMatchesDefault = () => {
 	}
 };
 
+const onIconUpdated = (icon: { type: 'icon' | 'emoji'; value: string }) => {
+	projectIcon.value = icon;
+	isDirty.value = true;
+};
+
 watch(
 	() => projectsStore.currentProject,
 	async () => {
@@ -270,9 +280,10 @@ onMounted(() => {
 			<fieldset>
 				<div :class="$style['project-name-label']">
 					<N8nIconPicker
-						default-icon="layer-group"
+						:default-icon="projectsStore.currentProject?.icon ?? projectIcon"
 						:button-tooltip="locale.baseText('projects.settings.iconPicker.button.tooltip')"
 						:available-icons="availableProjectIcons"
+						@icon-selected="onIconUpdated"
 					/>
 					<label for="projectName">{{ locale.baseText('projects.settings.name') }}</label>
 				</div>

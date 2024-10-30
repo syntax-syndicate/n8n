@@ -45,7 +45,7 @@ const addProject = computed<IMenuItem>(() => ({
 const getProjectMenuItem = (project: ProjectListItem) => ({
 	id: project.id,
 	label: project.name,
-	icon: props.collapsed ? undefined : 'layer-group',
+	icon: props.collapsed ? undefined : project.icon,
 	route: {
 		to: {
 			name: VIEWS.PROJECTS_WORKFLOWS,
@@ -72,6 +72,7 @@ const addProjectClicked = async () => {
 	try {
 		const newProject = await projectsStore.createProject({
 			name: locale.baseText('projects.settings.newProjectName'),
+			icon: { type: 'icon', value: 'layer-group' },
 		});
 		await router.push({ name: VIEWS.PROJECT_SETTINGS, params: { projectId: newProject.id } });
 		toast.showMessage({

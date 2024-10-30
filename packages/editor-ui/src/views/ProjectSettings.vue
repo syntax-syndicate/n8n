@@ -18,6 +18,8 @@ import type { ProjectRole } from '@/types/roles.types';
 import { useCloudPlanStore } from '@/stores/cloudPlan.store';
 import { useTelemetry } from '@/composables/useTelemetry';
 import { useDocumentTitle } from '@/composables/useDocumentTitle';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
 type FormDataDiff = {
 	name?: string;
@@ -50,6 +52,8 @@ const projectRoleTranslations = ref<{ [key: string]: string }>({
 	'project:admin': locale.baseText('projects.settings.role.admin'),
 });
 const nameInput = ref<InstanceType<typeof N8nFormInput> | null>(null);
+
+const availableProjectIcons: string[] = Object.keys(library.definitions.fas);
 
 const usersList = computed(() =>
 	usersStore.allUsers.filter((user: IUser) => {
@@ -264,7 +268,14 @@ onMounted(() => {
 		</div>
 		<form @submit.prevent="onSubmit">
 			<fieldset>
-				<label for="projectName">{{ locale.baseText('projects.settings.name') }}</label>
+				<div :class="$style['project-name-label']">
+					<N8nIconPicker
+						default-icon="layer-group"
+						:button-tooltip="locale.baseText('projects.settings.iconPicker.button.tooltip')"
+						:available-icons="availableProjectIcons"
+					/>
+					<label for="projectName">{{ locale.baseText('projects.settings.name') }}</label>
+				</div>
 				<N8nFormInput
 					id="projectName"
 					ref="nameInput"
@@ -429,5 +440,16 @@ onMounted(() => {
 	display: flex;
 	justify-content: flex-end;
 	align-items: center;
+}
+
+.project-name-label {
+	display: flex;
+	gap: var(--spacing-2xs);
+	align-items: center;
+	margin-bottom: var(--spacing-xs);
+
+	label {
+		margin-bottom: 0 !important;
+	}
 }
 </style>

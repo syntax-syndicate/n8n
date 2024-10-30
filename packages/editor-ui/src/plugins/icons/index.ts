@@ -122,6 +122,7 @@ import {
 	faSearchPlus,
 	faServer,
 	faScrewdriver,
+	faSmile,
 	faSignInAlt,
 	faSignOutAlt,
 	faSlidersH,
@@ -294,6 +295,7 @@ export const FontAwesomePlugin: Plugin = {
 		addIcon(faSearchPlus);
 		addIcon(faServer);
 		addIcon(faScrewdriver);
+		addIcon(faSmile);
 		addIcon(faSignInAlt);
 		addIcon(faSignOutAlt);
 		addIcon(faSlidersH);

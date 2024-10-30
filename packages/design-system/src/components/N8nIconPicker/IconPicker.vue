@@ -174,6 +174,7 @@ onMounted(() => {
 		gap: var(--spacing-xs);
 		padding: var(--spacing-2xs);
 		overflow-y: auto;
+		font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
 	}
 
 	.icon,

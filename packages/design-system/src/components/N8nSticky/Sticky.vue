@@ -30,9 +30,12 @@ const resWidth = computed((): number => {
 
 const inputName = computed(() => (props.id ? `${props.id}-input` : undefined));
 
-const styles = computed((): { height: string; width: string } => ({
+const styles = computed((): { height: string; width: string; backgroundColor?: string } => ({
 	height: `${resHeight.value}px`,
 	width: `${resWidth.value}px`,
+	backgroundColor: String(props.backgroundColor).startsWith('#')
+		? props.backgroundColor
+		: undefined,
 }));
 
 const shouldShowFooter = computed((): boolean => resHeight.value > 100 && resWidth.value > 155);

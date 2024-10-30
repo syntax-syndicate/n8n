@@ -21,6 +21,7 @@ import type { BrowserJsPlumbInstance } from '@jsplumb/browser-ui';
 import { useNodeBase } from '@/composables/useNodeBase';
 import { useTelemetry } from '@/composables/useTelemetry';
 import { useStyles } from '@/composables/useStyles';
+import ColorPicker from 'n8n-design-system/components/N8nColorPicker/ColorPicker.vue';
 
 const props = withDefaults(
 	defineProps<{
@@ -62,6 +63,9 @@ const isTouchActive = ref<boolean>(false);
 const forceActions = ref(false);
 const isColorPopoverVisible = ref(false);
 const stickOptions = ref<HTMLElement>();
+const colorPicker = ref<HTMLElement>();
+const customColor = ref<string | undefined>(undefined);
+const colorPickerOpen = ref(false);
 
 const setForceActions = (value: boolean) => {
 	forceActions.value = value;
@@ -86,7 +90,7 @@ const nodeBase = useNodeBase({
 	emit: emit as (event: string, ...args: unknown[]) => void,
 });
 
-onClickOutside(stickOptions, () => setColorPopoverVisible(false));
+// onClickOutside(stickOptions, () => setColorPopoverVisible(false), { ignore: [colorPicker] });
 
 defineExpose({
 	deviceSupport,
@@ -173,13 +177,13 @@ const deleteNode = async () => {
 	emit('removeNode', data.value.name);
 };
 
-const changeColor = (index: number) => {
+const changeColor = (color: number | string) => {
 	workflowsStore.updateNodeProperties({
 		name: props.name,
 		properties: {
 			parameters: {
 				...node.value?.parameters,
-				color: index,
+				color: color,
 			},
 			position: node.value?.position ?? [0, 0],
 		},
@@ -296,6 +300,10 @@ const onContextMenu = (e: MouseEvent): void => {
 		e.stopPropagation();
 	}
 };
+
+const onColorPickerChange = (value: string | null) => {
+	changeColor(customColor.value);
+};
 </script>
 
 <template>
@@ -362,7 +370,7 @@ const onContextMenu = (e: MouseEvent): void => {
 					effect="dark"
 					trigger="click"
 					placement="top"
-					:popper-style="{ width: '208px' }"
+					:popper-style="{ width: '250px' }"
 					:visible="isColorPopoverVisible"
 					@show="onShowPopover"
 					@hide="onHidePopover"
@@ -395,8 +403,16 @@ const onContextMenu = (e: MouseEvent): void => {
 										? `0 0 0 1px var(--color-sticky-background-${index + 1})`
 										: 'none',
 							}"
-							@click="changeColor(index + 1)"
+							@click="changeColor(index)"
 						></div>
+						<div ref="colorPicker" class="color pick-color-button" @click="colorPickerOpen = true">
+							<ColorPicker
+								v-model="customColor"
+								:show-input="false"
+								:popper-class="'sticky-color-picker'"
+								@update:model-value="onColorPickerChange"
+							/>
+						</div>
 					</div>
 				</n8n-popover>
 			</div>
@@ -496,6 +512,22 @@ const onContextMenu = (e: MouseEvent): void => {
 
 	&:hover {
 		cursor: pointer;
+	}
+}
+
+.pick-color-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: transparent;
+	color: var(--color-text-lighter);
+	font-size: var(--font-size-l);
+	font-weight: var(--font-weight-bold);
+	margin-left: var(--spacing-2xs);
+	cursor: pointer;
+
+	&:hover {
+		color: var(--color-primary);
 	}
 }
 </style>

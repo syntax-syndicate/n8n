@@ -48,6 +48,15 @@ const displayOptions = {
 
 export const description = updateDisplayOptions(displayOptions, properties);
 
+const isJSON = (str: string) => {
+	try {
+		JSON.parse(str);
+		return true;
+	} catch {
+		return false;
+	}
+};
+
 export async function execute(
 	this: IExecuteFunctions,
 	runQueries: QueriesRunner,

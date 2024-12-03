@@ -1226,8 +1226,6 @@ export interface INodeExecuteFunctions {
 	getExecuteTriggerFunctions: IGetExecuteTriggerFunctions;
 	getExecuteFunctions: IGetExecuteFunctions;
 	getExecuteSingleFunctions: IGetExecuteSingleFunctions;
-	getExecuteHookFunctions: IGetExecuteHookFunctions;
-	getExecuteWebhookFunctions: IGetExecuteWebhookFunctions;
 }
 
 export type NodeParameterValue = string | number | boolean | undefined | null;
